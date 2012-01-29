@@ -10,7 +10,7 @@ This project depends on PyUSB >= 1.0, PyGame, and OpenCV.
 
 ## Getting Started:
 
-    git clone git://github.com/strassek/stormLauncher.git
+    git clone git://github.com/strassek/storm.git
     cd storm
     sudo python runstorm.py
 

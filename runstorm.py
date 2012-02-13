@@ -11,19 +11,25 @@
 
 from launcher.turret import MotorController
 from launcher.camera import VideoCapturePlayer
-from sys import exit
 import pygame
 import time
+import sys
 
 if __name__ == '__main__':
+	
+	camdev = 0
+
+	# select what camera to use
+	if len(sys.argv) > 1:
+		camdev = eval(sys.argv[1])
+
 	try:
 		turret = MotorController()
+		cam = VideoCapturePlayer(camdev)
 	except ValueError as detail:
 		exit(detail)
 
 	pygame.init()
-	pygame.camera.init()
-	cam = VideoCapturePlayer()
 
 	# Try to reduce some of the noise in the event queue
 	pygame.event.set_allowed(None)
@@ -44,12 +50,8 @@ if __name__ == '__main__':
 					turret.down()
 				elif event.key == pygame.K_SPACE:
 					turret.fire()
-					print "BANG!"
 				elif event.key == pygame.K_q:
 					pygame.quit()
 					exit()
-			#elif event.type == pygame.QUIT:
-			#	pygame.quit()
-			#	exit()
 			else:
 				turret.stop()

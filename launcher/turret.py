@@ -14,8 +14,11 @@ class MotorController():
 		self.dev = usb.core.find(idVendor=0x2123, idProduct=0x1010)
 		if self.dev is None:
 			raise ValueError('Launcher not found.')
-		if self.dev.is_kernel_driver_active(0) is True:
-			 self.dev.detach_kernel_driver(0)
+		try:
+			if self.dev.is_kernel_driver_active(0) is True:
+				self.dev.detach_kernel_driver(0)
+		except usb.core.USBError as detail:
+			raise ValueError('Kernel driver: %s' % detail)
 		self.dev.set_configuration()
 
 	def up(self):

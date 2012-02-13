@@ -10,40 +10,46 @@
 # wasd to aim. hold spacebar to fire.
 
 from launcher.turret import MotorController
-from launcher.camera import Camera
+from launcher.camera import VideoCapturePlayer
 from sys import exit
 import pygame
 import time
 
 if __name__ == '__main__':
 	try:
-		lc = MotorController()
+		turret = MotorController()
 	except ValueError as detail:
 		exit(detail)
 
-	cam = Camera("/dev/video1")
-	cam.takeVideo()
+	pygame.init()
+	pygame.camera.init()
+	cam = VideoCapturePlayer()
+
+	# Try to reduce some of the noise in the event queue
+	pygame.event.set_allowed(None)
+	pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
+
 	while True:
+		cam.get_and_flip()
 		events = pygame.event.get()
 		for event in events:
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_d:
-					lc.right()		
+					turret.right()		
 				elif event.key == pygame.K_a:
-					lc.left()
+					turret.left()
 				elif event.key == pygame.K_w:
-					lc.up()
+					turret.up()
 				elif event.key == pygame.K_s:
-					lc.down()
+					turret.down()
 				elif event.key == pygame.K_SPACE:
-					lc.fire()
+					turret.fire()
 					print "BANG!"
 				elif event.key == pygame.K_q:
-					cam.closeCam()
+					pygame.quit()
 					exit()
-			elif event.type == pygame.QUIT:
-				cam.closeCam()
-				exit()
+			#elif event.type == pygame.QUIT:
+			#	pygame.quit()
+			#	exit()
 			else:
-				lc.stop()
-		cam.vstream.next_frame()
+				turret.stop()

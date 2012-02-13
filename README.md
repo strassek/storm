@@ -6,7 +6,7 @@ There are a few projects that have demonstrated basic control
 of these launchers in Linux, this one aims to add support for 
 the built in webcam.
 
-This project depends on PyUSB >= 1.0, PyGame, and OpenCV.
+This project depends on PyUSB >= 1.0, PyGame.
 
 ## Getting Started:
 

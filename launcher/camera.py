@@ -1,91 +1,71 @@
-"""
-Interface for the launcher's onboard webcam.
-"""
+#!/usr/bin/env python
+
+# 1. Basic image capturing and displaying using the camera module
+
 import pygame
-import Image
-import sys
-import time
-import cv
-
-class Camera:
-	"""Contains device settings and allows the camera to take pictures and video"""
-	def __init__(self, device = "/dev/video0", fps = 30, width = 640, height = 480):
-		self.device = device
-		self.setCamDevice(self.device)
-		self.fps = fps
-		self.width = width
-		self.height = height
-		self.vthread = None
-		
-	def setCamDevice(self, device):
-		self.camera = None
-		if device == "/dev/video0":
-			self.camera = cv.CaptureFromCAM(0)
-		if device == "/dev/video1":
-			self.camera = cv.CaptureFromCAM(1)
-		if device == "/dev/video2":
-			self.camera = cv.CaptureFromCAM(2)
-		if device == "/dev/video3":
-			self.camera = cv.CaptureFromCAM(3)
-
-	def setFPS(self, fps):
-		self.fps = fps
-
-	def setResolution(self, width, height):
-		self.width = width
-		self.height = height
-		cv.SetCaptureProperty(self.camera, cv.CV_CAP_PROP_FRAME_WIDTH,width)
-		cv.SetCaptureProperty(self.camera, cv.CV_CAP_PROP_FRAME_HEIGHT,height)
+import pygame.camera
+from pygame.locals import *
 
 
-	def takePhoto(self):
-		self.window = pygame.display.set_mode((self.width,self.height))
-		pygame.display.set_caption("Storm | Photo")
-		self.screen = pygame.display.get_surface()
-		im = self.getImage()
-		pg_img = pygame.image.frombuffer(im.tostring(), cv.GetSize(im), "RGB")
-		self.screen.blit(pg_img, (0,0))
-		pygame.display.flip()
+class VideoCapturePlayer(object):
 
-	def takeVideo(self):
-		self.vstream = VideoStream(self)
+   size = ( 640, 480 )
+   def __init__(self, **argd):
+       self.__dict__.update(**argd)
+       super(VideoCapturePlayer, self).__init__(**argd)
 
-	def closeCam(self):
-		pygame.display.quit()
-		self.camera = None
-		self.setCamDevice(self.device)
+       # create a display surface. standard pygame stuff
+       self.display = pygame.display.set_mode( self.size, 0 )
 
-	def getImage(self):
-		im = cv.QueryFrame(self.camera)
-		return im
-	
-class VideoStream():
-	"""Facilitates viewing the camera as a video stream"""
-	def __init__(self, camera):
-		self.camera = camera
-		self.time = time.clock()
-		self.camera.window = pygame.display.set_mode((self.camera.width,self.camera.height))
-		pygame.display.set_caption("Storm | Video")
-		self.camera.screen = pygame.display.get_surface()
+       # gets a list of available cameras.
+       self.clist = pygame.camera.list_cameras()
+       if not self.clist:
+           raise ValueError("Sorry, no cameras detected.")
 
-	def next_frame(self):
-		"""Refresh the frame with a new image from the camera."""
-		if (time.clock() - self.time) < (1 / float(self.camera.fps)):
-			return
-		self.time = time.clock()
-		im = self.camera.getImage()
-		pg_img = pygame.image.frombuffer(im.tostring(), cv.GetSize(im), "RGB")
-		self.camera.screen.blit(pg_img, (0,0))
-		pygame.display.flip()
- 
-if __name__ == "__main__":
-	cam = Camera()
-	cam.takeVideo()
-	while True:
-		events = pygame.event.get()
-		for event in events:
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_q:
-					cam.closeCam()
-					sys.exit()
-		cam.vstream.next_frame()
+       # creates the camera of the specified size and in RGB colorspace
+       self.camera = pygame.camera.Camera(self.clist[0], self.size, "RGB")
+
+       # starts the camera
+       self.camera.start()
+
+       self.clock = pygame.time.Clock()
+
+       # create a surface to capture to.  for performance purposes, you want the
+       # bit depth to be the same as that of the display surface.
+       self.snapshot = pygame.surface.Surface(self.size, 0, self.display)
+
+   def get_and_flip(self):
+       # if you don't want to tie the framerate to the camera, you can check and
+       # see if the camera has an image ready.  note that while this works
+       # on most cameras, some will never return true.
+       if 0 and self.camera.query_image():
+           # capture an image
+
+           self.snapshot = self.camera.get_image(self.snapshot)
+       self.snapshot = self.camera.get_image(self.snapshot)
+       #self.snapshot = self.camera.get_image()
+
+       # blit it to the display surface.  simple!
+       self.display.blit(self.snapshot, (0,0))
+       pygame.display.flip()
+
+   def main(self):
+       going = True
+       while going:
+           events = pygame.event.get()
+           for e in events:
+               if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
+                   going = False
+
+           self.get_and_flip()
+           self.clock.tick()
+           #print (self.clock.get_fps())
+
+def main():
+    pygame.init()
+    pygame.camera.init()
+    VideoCapturePlayer().main()
+    pygame.quit()
+
+if __name__ == '__main__':
+    main()

@@ -3,6 +3,7 @@
 import pygame
 import pygame.camera
 from pygame.locals import *
+import sys
 
 class VideoCapturePlayer(object):
 
@@ -51,7 +52,9 @@ class VideoCapturePlayer(object):
 		while going:
 			events = pygame.event.get()
 			for e in events:
-				if e.type == QUIT or (e.type == KEYDOWN and e.key == K_ESCAPE):
+				if e.type == QUIT \
+				or (e.type == KEYDOWN and e.key == K_ESCAPE)\
+				or (e.type == KEYDOWN and e.key == K_q):
 					going = False
 
 			self.get_and_flip()
@@ -59,7 +62,10 @@ class VideoCapturePlayer(object):
 
 def main():
 	pygame.init()
-	VideoCapturePlayer().main()
+	if len(sys.argv) > 1:
+		VideoCapturePlayer(eval(sys.argv[1])).main()
+	else:	
+		VideoCapturePlayer().main()
 	pygame.quit()
 
 if __name__ == '__main__':

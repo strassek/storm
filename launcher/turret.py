@@ -1,69 +1,50 @@
+#!/usr/bin/env python
+
 """
-Control interface for articulating the turret and firing missles 
+Provides a control interface to the turret.
 """
 
-import usb.core
-import time
+import usb
 
 class MotorController():
 	"""
-	Controls the basic motor functionality provided by the USB interface.
+	Controls the basic motor functoinality provided by the USB interface.
 	"""
 
-	def __init__(self):
-		self.dev = usb.core.find(idVendor=0x2123, idProduct=0x1010)
-		if self.dev is None:
-			raise ValueError('Launcher not found.')
+	def __init__(self, vendor=0x2123, product=0x1010):
+		devices_list = [ list(bus.devices) for bus in usb.busses() ]
+		devices = sum(devices_list, [])
+		
+		for d in devices:
+			if d.idVendor == vendor and d.idProduct == product:
+				self._handle = handle = d.open()	
+
 		try:
-			if self.dev.is_kernel_driver_active(0) is True:
-				self.dev.detach_kernel_driver(0)
-		except usb.core.USBError as detail:
-			raise ValueError('Kernel driver: %s' % detail)
-		self.dev.set_configuration()
+			handle.reset()
+			handle.claimInterface(0)
+		except:
+			handle.detachKernelDriver(0)
+			handle.reset()
+			handle.claimInterface(0)
 
-	def up(self):
-		"""Tilt the turret up"""
-
-		self.dev.ctrl_transfer(0x21,0x09,0,0,[0x02,0x02,0x00,0x00,0x00,0x00,0x00,0x00]) 
+	def send(self, command):
+		self._handle.controlMsg(0x21, 0x09, [0x02, command], 0x0200)
 
 	def down(self):
-		"""Tilt the turret down"""
+		self.send(0x01)
 
-		self.dev.ctrl_transfer(0x21,0x09,0,0,[0x02,0x01,0x00,0x00,0x00,0x00,0x00,0x00])
+	def up(self):
+		self.send(0x02)
 
 	def left(self):
-		"""Rotate the turret left"""
-
-		self.dev.ctrl_transfer(0x21,0x09,0,0,[0x02,0x04,0x00,0x00,0x00,0x00,0x00,0x00])
+		self.send(0x04)
 
 	def right(self):
-		"""Rotate the turret right"""
-
-		self.dev.ctrl_transfer(0x21,0x09,0,0,[0x02,0x08,0x00,0x00,0x00,0x00,0x00,0x00])
-
-	def stop(self):
-		"""Stop all movement"""
-		
-		self.dev.ctrl_transfer(0x21,0x09,0,0,[0x02,0x20,0x00,0x00,0x00,0x00,0x00,0x00])
+		self.send(0x08)
 
 	def fire(self):
-		"""Advance barrel and fire a shot"""
+		self.send(0x10)
 
-		self.dev.ctrl_transfer(0x21,0x09,0,0,[0x02,0x10,0x00,0x00,0x00,0x00,0x00,0x00])
-		# The launcher needs a few seconds to complete this action
-		time.sleep(4)
+	def stop(self):
+		self.send(0x20)
 
-class StormMotor(MotorController):
-	"""
-	Offers some abstractions and functionality that are useful when operating 
-	the camera enabled storm launcher.
-	"""
-	def corrected_fire(self, delta_x=0.0, delta_y=0.0):
-		"""Adjust the turret before firing and then return to initial position"""
-		self.up()
-		time.sleep(0.3)
-		self.stop()
-		self.fire()
-		self.down()
-		time.sleep(0.25)
-		self.stop()

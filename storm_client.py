@@ -24,6 +24,7 @@ if __name__ == '__main__':
 		port = eval(sys.argv[2])
 
 	pygame.init()
+	pygame.display.set_mode((640,480),0)
 
 	# Try to reduce some of the noise in the event queue
 	pygame.event.set_allowed(None)
@@ -46,8 +47,7 @@ if __name__ == '__main__':
 				elif event.key == pygame.K_SPACE:
 					proxy.fire()
 				elif event.key == pygame.K_q:
-					proxy.quit()
-					exit()
+					sys.exit(0)
 			else:
 				proxy.stop()
 

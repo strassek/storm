@@ -9,8 +9,6 @@
 
 # wasd to aim. hold spacebar to fire.
 
-#from launcher.turret import MotorController
-#from launcher.camera import VideoCapturePlayer
 import xmlrpclib
 import pygame
 import time

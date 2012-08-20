@@ -1,25 +1,41 @@
 #!/usr/bin/env python
 
-# The following script will control the Dream Cheeky Storm & Thunder USB
-# Missile Launchers.  There are a few projects for using older launchers
-# in Linux, but I couldn't find any for this launcher, so... enjoy.
-
-# Thunder: http://www.dreamcheeky.com/thunder-missile-launcher
-# O.I.C Storm: http://www.dreamcheeky.com/storm-oic-missile-launcher
-
-# wasd to aim. hold spacebar to fire.
-
 import xmlrpclib
 import pygame
+import getopt
 import time
 import sys
 
+def usage():
+    print """
+Usage: %s [options]
+Options:
+    -r, --remote <uri> - Connect to remote server
+    -h, --help - This help
+""" % sys.argv[0]
+
 if __name__ == '__main__':
-	
 	# select what camera to use
-	if len(sys.argv) == 2:
-		host = eval(sys.argv[1])
-		port = eval(sys.argv[2])
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'r:h', ['remote=', 'help'])
+    except getopt.GetoptError, e:
+        print str(e)
+        usage()
+        sys.exit(2)
+
+    action = 'local'
+    host = 'http://localhost:8000/')
+
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            usage()
+            sys.exit(0)
+        elif o in ('-r', '--remote'):
+            action = 'remote'
+            host = a
+
+    proxy = xmlrpclib.ServerProxy(host)
 
 	pygame.init()
 	pygame.display.set_mode((640,480),0)
@@ -27,8 +43,6 @@ if __name__ == '__main__':
 	# Try to reduce some of the noise in the event queue
 	pygame.event.set_allowed(None)
 	pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
-
-	proxy = xmlrpclib.ServerProxy("http://localhost:8000/")
 
 	while True:
 		events = pygame.event.get()
@@ -48,4 +62,6 @@ if __name__ == '__main__':
 					sys.exit(0)
 			else:
 				proxy.stop()
+    
+    sys.exit(0)
 

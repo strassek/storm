@@ -22,7 +22,7 @@ Options:
     -r, --restart - Restart daemon
     -s, --stop - Stop daemon
     -h, --help - This help
-"""
+""" % sys.argv[0]
 
 if __name__ == '__main__':
     reload(sys)

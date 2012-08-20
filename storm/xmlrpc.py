@@ -112,3 +112,4 @@ def run_server(log_level=logging.INFO, config_file=''):
 
     log.info('Starting server')
     server.serve_forever()
+

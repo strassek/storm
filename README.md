@@ -19,3 +19,7 @@ This project depends on PyUSB and PyGame.
 * Use wasd aim.
 * Press spacebar to fire.
 * q to quit.
+
+## License
+
+Storm is made available under the MIT license.

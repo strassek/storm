@@ -9,8 +9,8 @@
 
 # wasd to aim. hold spacebar to fire.
 
-from launcher.turret import MotorController
-from launcher.camera import VideoCapturePlayer
+from storm.turret import MotorController
+from storm.camera import VideoCapturePlayer
 import pygame
 import time
 import sys

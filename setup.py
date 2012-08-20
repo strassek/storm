@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-try:
-	from setuptools import setup
-except ImportError:
-	from distutils.core import setup
+from distutils.core import setup
+from setuptools import find_packages
 
 setup(
 	name="storm",
@@ -18,8 +16,7 @@ setup(
 	long_description=open("README.md").read(),
 	license="MIT",
 	url="http://github.com/strassek/storm",
-	packages = find_packages()
-	package_data = 
+	packages = find_packages(),
 	scripts=['storm-server', 'storm-client'],
 	data_files=[
 		('/etc/storm', ['packaging/files/storm.conf']),

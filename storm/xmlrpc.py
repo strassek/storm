@@ -86,7 +86,7 @@ def make_log(debug=False, log_level=logging.INFO):
 def run_server(log_level=logging.INFO, config_file=''):
     log = make_log(debug=log_level==logging.DEBUG, log_level=log_level)
 
-    log.info('Storm %s' % version())
+    log.info('Storm %s' % version)
 
     config = SafeConfigParser()
     if config_file:

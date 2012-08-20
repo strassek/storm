@@ -15,7 +15,6 @@ Options:
 """ % sys.argv[0]
 
 if __name__ == '__main__':
-	# select what camera to use
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'r:h', ['remote=', 'help'])
@@ -25,7 +24,7 @@ if __name__ == '__main__':
         sys.exit(2)
 
     action = 'local'
-    host = 'http://localhost:8000/')
+    host = 'http://localhost:8000/'
 
     for o, a in opts:
         if o in ('-h', '--help'):
@@ -37,31 +36,31 @@ if __name__ == '__main__':
 
     proxy = xmlrpclib.ServerProxy(host)
 
-	pygame.init()
-	pygame.display.set_mode((640,480),0)
+    pygame.init()
+    pygame.display.set_mode((640,480),0)
 
 	# Try to reduce some of the noise in the event queue
-	pygame.event.set_allowed(None)
-	pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
+    pygame.event.set_allowed(None)
+    pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
 
-	while True:
-		events = pygame.event.get()
-		for event in events:
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_d:
-					proxy.right()		
-				elif event.key == pygame.K_a:
-					proxy.left()
-				elif event.key == pygame.K_w:
-					proxy.up()
-				elif event.key == pygame.K_s:
-					proxy.down()
-				elif event.key == pygame.K_SPACE:
-					proxy.fire()
-				elif event.key == pygame.K_q:
-					sys.exit(0)
-			else:
-				proxy.stop()
-    
+    while True:
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_d:
+                    proxy.right()		
+                elif event.key == pygame.K_a:
+                    proxy.left()
+                elif event.key == pygame.K_w:
+                    proxy.up()
+                elif event.key == pygame.K_s:
+                    proxy.down()
+                elif event.key == pygame.K_SPACE:
+                    proxy.fire()
+                elif event.key == pygame.K_q:
+                    sys.exit(0)
+                else:
+                    proxy.stop()
+
     sys.exit(0)
 

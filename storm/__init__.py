@@ -15,5 +15,3 @@ def version():
         return release
     return p.stdout.read().strip('\n ')
 
-if __name__ == '__main__':
-    print version()

@@ -90,13 +90,13 @@ def run_server(log_level=logging.INFO, config_file=''):
 
     config = SafeConfigParser()
     if config_file:
-        log.info('Using config file %s'%config_file)
+        log.info('Using config file %s' % config_file)
         config.read(config_file)
     else:
         log.info('Using default settings')
 
 	
-    turret = MotorController()
+    turret = MotorController(log)
 
     host = config.get('storm','bind_host')
     port = config.getint('storm','bind_port')

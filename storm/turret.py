@@ -4,14 +4,17 @@
 Provides a control interface to the turret.
 """
 
+import sys
 import usb
+import logging
 
 class MotorController():
 	"""
 	Controls the basic motor functoinality provided by the USB interface.
 	"""
 
-	def __init__(self, vendor=0x2123, product=0x1010):
+	def __init__(self, log=sys.stdout, vendor=0x2123, product=0x1010):
+		self._log = log
 		devices_list = [ list(bus.devices) for bus in usb.busses() ]
 		devices = sum(devices_list, [])
 		
@@ -22,6 +25,9 @@ class MotorController():
 		try:
 			handle.reset()
 			handle.claimInterface(0)
+		except NameError:
+			self._log.error("Device not found.")
+			sys.exit(2)
 		except:
 			handle.detachKernelDriver(0)
 			handle.reset()

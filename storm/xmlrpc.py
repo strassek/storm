@@ -11,7 +11,6 @@
 
 import sys
 import os
-import pygame
 import time
 import logging
 

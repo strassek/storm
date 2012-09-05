@@ -43,24 +43,31 @@ if __name__ == '__main__':
     pygame.event.set_allowed(None)
     pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
 
+    leftspeed = 100
+    rightspeed = 100
+
     while True:
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_d:
-                    proxy.right()		
-                elif event.key == pygame.K_a:
-                    proxy.left()
-                elif event.key == pygame.K_w:
-                    proxy.up()
+                if event.key == pygame.K_w:
+                    proxy.set_speed(0, leftspeed)		
+                    leftspeed += 1
                 elif event.key == pygame.K_s:
-                    proxy.down()
+                    proxy.set_speed(0, leftspeed)
+                    leftspeed -= 1
+                elif event.key == pygame.K_e:
+                    proxy.set_speed(1, rightspeed)
+                    rightspeed += 1
+                elif event.key == pygame.K_d:
+                    proxy.set_speed(1, rightspeed)
+                    rightspeed -= 1
                 elif event.key == pygame.K_SPACE:
-                    proxy.fire()
+                    rightspeed = leftspeed = 100
+                    proxy.set_speed(0, leftspeed)
+                    proxy.set_speed(1, rightspeed)
                 elif event.key == pygame.K_q:
                     sys.exit(0)
-                else:
-                    proxy.stop()
 
     sys.exit(0)
 

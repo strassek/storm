@@ -103,6 +103,7 @@ def run_server(log_level=logging.INFO, config_file=''):
 
     server = SimpleXMLRPCServer((host, port), logRequests=False, allow_none=True)
     server.register_function(motors.set_speed, "set_speed")
+    server.register_function(motors.set_direction, "set_direction")
 
     log.info('Starting server')
     server.serve_forever()

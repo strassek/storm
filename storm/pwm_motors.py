@@ -53,10 +53,10 @@ class MotorController():
         channel = int(req_channel)
         speed = int(req_speed)
         if channel not in range (2):
-            sys.stdout.write("Skipping set_speed. Channel out of bounds.")
+            sys.stdout.write("Skipping set_speed. Channel out of bounds.\n")
             return None
         if speed < 0 or speed > 100:
-            sys.stdout.write("Skipping set_speed. New speed out of bounds.")
+            sys.stdout.write("Skipping set_speed. New speed out of bounds.\n")
             return None
 
         self.channelsetup.channelPulsewidthValue = speed * self.periodValue / 100
@@ -72,5 +72,5 @@ if __name__ == '__main__':
             motors.set_speed(new_channel, new_speed)   
     except:
         MCPWM_Stop(LPC_MCPWM, ENABLE, ENABLE, DISABLE)
-        print "you broke it"
+        sys.stdout.write("You brode it.\n")
 

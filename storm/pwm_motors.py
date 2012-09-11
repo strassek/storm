@@ -16,13 +16,15 @@ from robovero.arduino import OUTPUT, LOW, HIGH
 from robovero.extras import roboveroConfig
 from robovero.LPC17xx import LPC_MCPWM
 from robovero.lpc_types import FunctionalState
+import logging
 import sys
 
 ENABLE = FunctionalState.ENABLE
 DISABLE = FunctionalState.DISABLE
 
 class MotorController():
-    def __init__(self, periodValue = 900):
+    def __init__(self, log, periodValue = 1200):
+	self._log = log
         self.periodValue = periodValue
         
         roboveroConfig()
@@ -61,10 +63,10 @@ class MotorController():
         channel = int(req_channel)
         speed = int(req_speed)
         if channel not in range (2):
-            sys.stdout.write("Skipping set_speed. Channel out of bounds.\n")
+            self._log.warning("Skipping set_speed. Channel out of bounds.")
             return None
         if speed < 0 or speed > 100:
-            sys.stdout.write("Skipping set_speed. New speed out of bounds.\n")
+            self._log.warning("Skipping set_speed. New speed out of bounds.")
             return None
 
         self.channelsetup.channelPulsewidthValue = speed * self.periodValue / 100
@@ -111,5 +113,5 @@ if __name__ == '__main__':
 	digitalWrite(P0_5, LOW)
 	digitalWrite(P2_3, LOW)
 	digitalWrite(P2_4, LOW)
-        sys.stdout.write("You brode it.\n")
+        sys.stdout.write("You broke it.\n")
 

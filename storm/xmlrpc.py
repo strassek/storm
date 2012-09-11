@@ -95,7 +95,7 @@ def run_server(log_level=logging.INFO, config_file=''):
         log.info('Using default settings')
 
 	
-    motors = MotorController()
+    motors = MotorController(log)
 
     host = config.get('storm','bind_host')
     port = config.getint('storm','bind_port')

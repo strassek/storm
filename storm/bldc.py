@@ -14,12 +14,12 @@ from robovero.lpc_types import FunctionalState
 
 from robovero.arduino import analogWrite, PWM1
 
-from sys import stdout
+import logging
+
 # Entry Point
 roboveroConfig()
-initPWM()	
 
-def getServoAngle(self, raw_angle):
+def getServoAngle(raw_angle):
 	"""Get an angle and calculate new duty cycle.
 	"""
 	try:
@@ -27,16 +27,16 @@ def getServoAngle(self, raw_angle):
 		if angle < 0 or angle > 180:
 			raise InputError
 	except:
-		print "enter an angle between 0 and 180 degrees"
 		return None
 	match_value = 1100 + (angle*500/180)
 	return match_value
 
-class BLDC():
+class MotorController():
 
-	def __init__(self, period=20000):
+	def __init__(self, log, period=20000):
 		"""Set up PWM at 50Hz.
 		"""
+		self.log = log
 
 		# Set the period to 20000us = 20ms = 50Hz
 		initMatch(0, period)
@@ -46,7 +46,7 @@ class BLDC():
 		PWM_Cmd(LPC_PWM1, FunctionalState.ENABLE)
 
 		self.channels = []
-		stdout.write("Initialized BLDC motor controller")	
+		self.log.info("Initialized BLDC motor controller.\n")	
 
 	def add_channel(self, raw_channel, init_pulse = 1500):
 		"""Add PWM channel with a 1.5ms pulse.
@@ -56,12 +56,12 @@ class BLDC():
 			if channel < 1 or channel > 5:
 				raise InputError
 		except:
-			stdout.write("%s is an invalid channel.\n" % raw_channel)
+			self.log.warning("%s is an invalid channel.\n" % raw_channel)
 			return None 
 		
 		# Check if channel has already been added
 		if channel in self.channels:
-			stdout.write("Channel %d has already been initialized.\n" % channel)
+			self.log.warning("Channel %d has already been initialized.\n" % channel)
 			return None
 
 		self.channels.append(channel)
@@ -70,12 +70,12 @@ class BLDC():
 		PWM_ChannelCmd(LPC_PWM1, channel, FunctionalState.ENABLE)
 		#TODO: might need counter commands here. check this first.
 
-		stdout.write("Initializing BLDC pwm channel %d." % channel)
+		self.log.info("Initializing BLDC pwm channel %d." % channel)
 
 	def set_pulse(self, channel, pulse):
 		
 		if channel not in self.channels:
-			stdout.write("%s is invalid or is not an initialized channel.\n" % channel)
+			self.log.warning("%s is invalid or is not an initialized channel.\n" % channel)
 			return None
 		
 		

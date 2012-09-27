@@ -15,7 +15,7 @@ import time
 import logging
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
-from storm.pwm_motors import MotorController
+from storm.bldc import MotorController
 from ConfigParser import SafeConfigParser
 from storm import version
 
@@ -96,14 +96,15 @@ def run_server(log_level=logging.INFO, config_file=''):
 
 	
     motors = MotorController(log)
+    motors.add_channel(1)
+    motors.add_channel(2)
 
     host = config.get('storm','bind_host')
     port = config.getint('storm','bind_port')
     log.info('Listening on %s:%d' % (host, port))
 
     server = SimpleXMLRPCServer((host, port), logRequests=False, allow_none=True)
-    server.register_function(motors.set_speed, "set_speed")
-    server.register_function(motors.set_direction, "set_direction")
+    server.register_function(motors.set_pulse, "set_pulse")
 
     log.info('Starting server')
     server.serve_forever()

@@ -6,6 +6,18 @@ import getopt
 import time
 import sys
 
+def getServoAngle(raw_angle):
+        """Get an angle and calculate new duty cycle.
+        """
+        try:
+                angle = int(raw_angle)
+                if angle < 0 or angle > 180:
+                        raise InputError
+        except:
+                return None
+        match_value = 1100 + (angle*500/180)
+        return match_value
+
 def usage():
     print """
 Usage: %s [options]
@@ -43,37 +55,50 @@ if __name__ == '__main__':
     pygame.event.set_allowed(None)
     pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
 
-    leftspeed = 100
-    rightspeed = 100
+    leftangle_HI = 36
+    rightangle_HI = 36
+
+    leftangle_LOW = 30
+    rightangle_LOW = 30
+
+    leftangle_ARM = 0
+    rightangle_ARM = 0
+    
+    proxy.set_pulse(1, getServoAngle(leftangle_LOW))
+    proxy.set_pulse(2, getServoAngle(rightangle_LOW))		
 
     while True:
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:
-                    proxy.set_speed(0, leftspeed)		
-                    leftspeed += 1
+                    proxy.set_pulse(1, getServoAngle(leftangle_HI))
+		    proxy.set_pulse(2, getServoAngle(rightangle_HI))		
                 elif event.key == pygame.K_s:
-                    proxy.set_speed(0, leftspeed)
-                    leftspeed -= 1
-                elif event.key == pygame.K_e:
-                    proxy.set_speed(1, rightspeed)
-                    rightspeed += 1
+                    proxy.set_pulse(1, getServoAngle(leftangle_LOW))
+		    proxy.set_pulse(2, getServoAngle(rightangle_LOW))		
+                elif event.key == pygame.K_a:
+                    proxy.set_pulse(1, getServoAngle(leftangle_LOW))
+		    proxy.set_pulse(2, getServoAngle(rightangle_HI))		
                 elif event.key == pygame.K_d:
-                    proxy.set_speed(1, rightspeed)
-                    rightspeed -= 1
-		elif event.key == pygame.K_r:
-		    proxy.set_direction(0, 0)
-		elif event.key == pygame.K_f:
-		    proxy.set_direction(0, 1)
-		elif event.key == pygame.K_t:
-		    proxy.set_direction(1, 0)
-		elif event.key == pygame.K_g:
-		    proxy.set_direction(1, 1)
-                elif event.key == pygame.K_SPACE:
-                    rightspeed = leftspeed = 100
-                    proxy.set_speed(0, leftspeed)
-                    proxy.set_speed(1, rightspeed)
+                    proxy.set_pulse(1, getServoAngle(leftangle_HI))
+		    proxy.set_pulse(2, getServoAngle(rightangle_LOW))		
+		elif event.key == pygame.K_i:
+		    leftangle_HI += 1
+		elif event.key == pygame.K_k:
+		    if leftangle_HI > leftangle_LOW:
+		        leftangle_HI -= 1
+		elif event.key == pygame.K_o:
+		    rightangle_HI += 1
+		elif event.key == pygame.K_l:
+		    if rightangle_HI > rightangle_HI:
+		        rightangle_HI -= 1
+		elif event.key == pygame.K_1:
+		    proxy.set_pulse(1, getServoAngle(leftangle_ARM))
+		    print "Please wait, Arming channel 1..."
+                elif event.key == pygame.K_2:
+		    proxy.set_pulse(2, getServoAngle(rightangle_ARM))
+		    print "Please wait, Arming channel 2..."
                 elif event.key == pygame.K_q:
                     sys.exit(0)
 

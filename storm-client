@@ -63,6 +63,9 @@ if __name__ == '__main__':
 
     leftangle_ARM = 0
     rightangle_ARM = 0
+
+    proxy.add_channel(1)
+    proxy.add_channel(2)
     
     proxy.set_pulse(1, getServoAngle(leftangle_LOW))
     proxy.set_pulse(2, getServoAngle(rightangle_LOW))		

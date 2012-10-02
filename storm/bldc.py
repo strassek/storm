@@ -46,7 +46,7 @@ class MotorController():
 		PWM_Cmd(LPC_PWM1, FunctionalState.ENABLE)
 
 		self.channels = []
-		self.log.info("Initialized BLDC motor controller.\n")	
+		self.log.info("Initialized BLDC motor controller.")	
 
 	def add_channel(self, raw_channel, init_pulse = 1500):
 		"""Add PWM channel with a 1.5ms pulse.
@@ -56,12 +56,12 @@ class MotorController():
 			if channel < 1 or channel > 5:
 				raise InputError
 		except:
-			self.log.warning("%s is an invalid channel.\n" % raw_channel)
+			self.log.warning("%s is an invalid channel." % raw_channel)
 			return None 
 		
 		# Check if channel has already been added
 		if channel in self.channels:
-			self.log.warning("Channel %d has already been initialized.\n" % channel)
+			self.log.warning("Channel %d has already been initialized." % channel)
 			return None
 
 		self.channels.append(channel)
@@ -72,20 +72,19 @@ class MotorController():
 
 		self.log.info("Initializing BLDC pwm channel %d." % channel)
 
-	def set_pulse(self, channel, pulse):
+	def set_pulse(self, channel, raw_pulse):
 		
 		if channel not in self.channels:
-			self.log.warning("%s is invalid or is not an initialized channel.\n" % channel)
+			self.log.warning("%s is invalid or is not an initialized channel." % channel)
 			return None
 		
+		try:
+			pulse = int(raw_pulse)
+			if pulse < 0:
+				raise InputError
+		except:
+			self.log.warning("%s is an invalid pulse." % raw_pulse)
+			return None
 		
 		PWM_MatchUpdate(LPC_PWM1, channel, pulse, PWM_MATCH_UPDATE_OPT.PWM_MATCH_UPDATE_NOW)
 
-if __name__ == "__main__":
-
-	motor = BLDC()
-	motor.add_channel(1)
-	while True:
-		match_value = getServoAngle()
-		if match_value:
-			motor.set_pulse(match_value)	

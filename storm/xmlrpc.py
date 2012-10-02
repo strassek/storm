@@ -96,14 +96,13 @@ def run_server(log_level=logging.INFO, config_file=''):
 
 	
     motors = MotorController(log)
-    motors.add_channel(1)
-    motors.add_channel(2)
 
     host = config.get('storm','bind_host')
     port = config.getint('storm','bind_port')
     log.info('Listening on %s:%d' % (host, port))
 
     server = SimpleXMLRPCServer((host, port), logRequests=False, allow_none=True)
+    server.register_function(motors.add_channel, "add_channel")
     server.register_function(motors.set_pulse, "set_pulse")
 
     log.info('Starting server')

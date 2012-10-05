@@ -67,7 +67,7 @@ class ClientProxy:
 
 	def arm(self, channel):
 		self.proxy.add_channel(channel)
-		self.proxy.set_pulse(PULSE_ARM)
+		self.proxy.set_pulse(channel, PULSE_ARM)
 
 	def forward(self):
 		self.proxy.set_pulse(1, PULSE_HI)
@@ -83,6 +83,10 @@ class ClientProxy:
 	
 	def right(self):
 		self.proxy.set_pulse(1, PULSE_HI)
+		self.proxy.set_pulse(2, PULSE_LOW)
+
+	def stop(self):
+		self.proxy.set_pulse(1, PULSE_LOW)
 		self.proxy.set_pulse(2, PULSE_LOW)
 
 def usage():

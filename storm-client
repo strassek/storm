@@ -1,22 +1,89 @@
 #!/usr/bin/env python
 
 import xmlrpclib
-import pygame
 import getopt
 import time
 import sys
 
-def getServoAngle(raw_angle):
-        """Get an angle and calculate new duty cycle.
-        """
-        try:
-                angle = int(raw_angle)
-                if angle < 0 or angle > 180:
-                        raise InputError
-        except:
-                return None
-        match_value = 1100 + (angle*500/180)
-        return match_value
+import pygtk
+pygtk.require('2.0')
+import gtk
+
+KEY_EVENT_PRESS = (0)
+KEY_EVENT_RELEASE = (1)
+
+PULSE_HI = 1211
+PULSE_LOW = 1183
+PULSE_ARM = 1100
+
+class ClientApp:
+
+	def __init__(self):
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.connect("key-press-event", self.key_event, KEY_EVENT_PRESS)
+		self.window.connect("key-release-event", self.key_event, KEY_EVENT_RELEASE)
+		self.window.show()
+
+	def key_event(self, widget, event, direction):
+		if direction == KEY_EVENT_PRESS:
+			if event.keyval == gtk.keysyms.Escape:
+				gtk.main_quit()
+			elif event.keyval == gtk.keysyms.w:
+				print "forward"
+				self.forward()
+			elif event.keyval == gtk.keysyms.s:
+				print "back"
+				self.back()
+			elif event.keyval == gtk.keysyms.a:
+				print "left"
+				self.left()
+			elif event.keyval == gtk.keysyms.d:
+				print "right"
+				self.right()
+			elif event.keyval == gtk.keysyms._1:
+				print "Arming channel 1, please wait..."
+				self.arm(1)
+				time.sleep(5)
+			elif event.keyval == gtk.keysyms._2:
+				print "Arming channel 2, please wait..."
+				self.arm(2)
+				time.sleep(5)
+			elif event.keyval == gtk.keysyms._3:
+				print "Arming channel 3, please wait..."
+				self.arm(3)
+				time.sleep(5)
+		elif direction == KEY_EVENT_RELEASE:
+			self.stop()
+			print "stop"			
+				
+
+	def main(self):
+		gtk.main()
+
+class ClientProxy:
+	
+	def __init__(self, host):
+		self.proxy = xmlrpclib.ServerProxy(host)
+
+	def arm(self, channel):
+		self.proxy.add_channel(channel)
+		self.proxy.set_pulse(PULSE_ARM)
+
+	def forward(self):
+		self.proxy.set_pulse(1, PULSE_HI)
+		self.proxy.set_pulse(2, PULSE_LOW)
+
+	def back(self):
+		self.proxy.set_pulse(1, PULSE_LOW)
+		self.proxy.set_pulse(2, PULSE_LOW)
+
+	def left(self):
+		self.proxy.set_pulse(1, PULSE_LOW)
+		self.proxy.set_pulse(2, PULSE_HI)
+	
+	def right(self):
+		self.proxy.set_pulse(1, PULSE_HI)
+		self.proxy.set_pulse(2, PULSE_LOW)
 
 def usage():
     print """
@@ -46,64 +113,15 @@ if __name__ == '__main__':
             action = 'remote'
             host = a
 
-    proxy = xmlrpclib.ServerProxy(host)
+    proxy = ClientProxy(host)
+    app = ClientApp()
 
-    pygame.init()
-    pygame.display.set_mode((640,480),0)
+    app.forward = proxy.forward
+    app.back = proxy.back
+    app.left = proxy.left
+    app.right = proxy.right
+    app.stop = proxy.stop
+    app.arm = proxy.arm
 
-	# Try to reduce some of the noise in the event queue
-    pygame.event.set_allowed(None)
-    pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
-
-    leftangle_HI = 36
-    rightangle_HI = 36
-
-    leftangle_LOW = 30
-    rightangle_LOW = 30
-
-    leftangle_ARM = 0
-    rightangle_ARM = 0
-
-    proxy.add_channel(1)
-    proxy.add_channel(2)
-    
-    proxy.set_pulse(1, getServoAngle(leftangle_LOW))
-    proxy.set_pulse(2, getServoAngle(rightangle_LOW))		
-
-    while True:
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w:
-                    proxy.set_pulse(1, getServoAngle(leftangle_HI))
-		    proxy.set_pulse(2, getServoAngle(rightangle_HI))		
-                elif event.key == pygame.K_s:
-                    proxy.set_pulse(1, getServoAngle(leftangle_LOW))
-		    proxy.set_pulse(2, getServoAngle(rightangle_LOW))		
-                elif event.key == pygame.K_a:
-                    proxy.set_pulse(1, getServoAngle(leftangle_LOW))
-		    proxy.set_pulse(2, getServoAngle(rightangle_HI))		
-                elif event.key == pygame.K_d:
-                    proxy.set_pulse(1, getServoAngle(leftangle_HI))
-		    proxy.set_pulse(2, getServoAngle(rightangle_LOW))		
-		elif event.key == pygame.K_i:
-		    leftangle_HI += 1
-		elif event.key == pygame.K_k:
-		    if leftangle_HI > leftangle_LOW:
-		        leftangle_HI -= 1
-		elif event.key == pygame.K_o:
-		    rightangle_HI += 1
-		elif event.key == pygame.K_l:
-		    if rightangle_HI > rightangle_HI:
-		        rightangle_HI -= 1
-		elif event.key == pygame.K_1:
-		    proxy.set_pulse(1, getServoAngle(leftangle_ARM))
-		    print "Please wait, Arming channel 1..."
-                elif event.key == pygame.K_2:
-		    proxy.set_pulse(2, getServoAngle(rightangle_ARM))
-		    print "Please wait, Arming channel 2..."
-                elif event.key == pygame.K_q:
-                    sys.exit(0)
-
-    sys.exit(0)
+    app.main()
 

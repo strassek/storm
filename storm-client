@@ -8,6 +8,10 @@ import sys
 import pygtk
 pygtk.require('2.0')
 import gtk
+import gobject
+import pygst
+pygst.require('0.10')
+import gst
 
 KEY_EVENT_PRESS = (0)
 KEY_EVENT_RELEASE = (1)
@@ -20,14 +24,63 @@ class ClientApp:
 
 	def __init__(self):
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.set_title("meson | storm")
+		self.window.connect("destroy", self.exit)
 		self.window.connect("key-press-event", self.key_event, KEY_EVENT_PRESS)
 		self.window.connect("key-release-event", self.key_event, KEY_EVENT_RELEASE)
-		self.window.show()
+		vbox = gtk.VBox()
+		self.window.add(vbox)
+		self.movie_window = gtk.DrawingArea()
+		vbox.add(self.movie_window)
+		self.window.show_all()
+		
+		src = gst.element_factory_make("filesrc")
+		src.set_property("location", "/home/strassek/Videos/yocto_mobile.mp4")
+		dec = gst.element_factory_make("decodebin2")
+		queue = gst.element_factory_make("queue")
+		color = gst.element_factory_make("ffmpegcolorspace")
+		sink  = gst.element_factory_make("autovideosink")
+
+		pipeline = gst.Pipeline("pipeline")
+		pipeline.add(src, dec, queue, color, sink)
+
+		def on_pad(comp, pad, data, element):
+			sinkpad = element.get_compatible_pad(pad, pad.get_caps())
+			if sinkpad:
+				pad.link(sinkpad)
+
+		dec.connect("new-decoded-pad", on_pad, queue)
+		src.link(dec)
+		queue.link(color)
+		color.link(sink)
+
+		self.pipeline = pipeline
+
+		bus = self.pipeline.get_bus()
+		bus.add_signal_watch()
+		bus.enable_sync_message_emission()
+		bus.connect("sync-message::element", self.on_sync_message)
+
+	def start_video(self):
+		self.pipeline.set_state(gst.STATE_PLAYING)
+
+
+	def on_sync_message(self, bus, message):
+		if message.structure is None:
+			return
+		message_name = message.structure.get_name()
+		if message_name == "prepare-xwindow-id":
+			imagesink = message.src
+			imagesink.set_property("force-aspect-ratio", True)
+			gtk.gdk.threads_enter()
+			imagesink.set_xwindow_id(self.movie_window.window.xid)
+			gtk.gdk.threads_leave()
 
 	def key_event(self, widget, event, direction):
 		if direction == KEY_EVENT_PRESS:
 			if event.keyval == gtk.keysyms.Escape:
-				gtk.main_quit()
+				print "Good Bye.."
+				self.exit()
 			elif event.keyval == gtk.keysyms.w:
 				print "forward"
 				self.forward()
@@ -56,8 +109,13 @@ class ClientApp:
 			self.stop()
 			print "stop"			
 				
+	def exit(self):
+		self.pipeline.set_state(gst.STATE_NULL)
+		gtk.main_quit()
 
 	def main(self):
+		gtk.gdk.threads_init()
+		self.start_video()
 		gtk.main()
 
 class ClientProxy:

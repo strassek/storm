@@ -6,7 +6,7 @@ import gst
 class VidServer:
     def __init__(self, log):
         src = gst.element_factory_make("v4l2src")
-	src.set_property("device", "/dev/video6")
+        src.set_property("device", "/dev/video6")
 
         enc = gst.element_factory_make("TIVidenc1")
         enc.set_property("codecName", "mpeg4enc")
@@ -44,7 +44,7 @@ class VidServer:
         self.pipeline.set_state(gst.STATE_PLAYING)
 
     def pause(self):
-        self.pipeline.set_state(gst.STATE_PAUSE)
+        self.pipeline.set_state(gst.STATE_PAUSED)
 
     def stop(self):
         self.pipeline.set_state(gst.STATE_NULL)

@@ -38,17 +38,19 @@ class ClientApp:
         
         src = gst.element_factory_make("udpsrc")
         src.set_property("port", 4000)
-        src.set_property("caps", "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)MP4V-ES, profile-level-id=(string)5, config=(string)000001b005000001b509000001000000012000845d4c28bc21e0a31f, payload=(int)96, ssrc=(uint)2023770825, clock-base=(uint)2503951416, seqnum-base=(uint)23512")
+        caps = gst.Caps("application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)MP4V-ES, profile-level-id=(string)5, config=(string)000001b005000001b509000001000000012000845d4c28bc21e0a31f, payload=(int)96, ssrc=(uint)2023770825, clock-base=(uint)2503951416, seqnum-base=(uint)23512")
+        capsFilter = gst.element_factory_make("capsfilter")
+        capsFilter.props.caps = caps
         depay = gst.element_factory_make("rtpmp4vdepay")
         dec = gst.element_factory_make("ffdec_mpeg4", "decoder")
         sink  = gst.element_factory_make("xvimagesink", "sink")
         sink.set_property("sync", "false")
 
         pipeline = gst.Pipeline("pipeline")
-        pipeline.add(src, depay, dec, sink)
+        pipeline.add(src, capsFilter, depay, dec, sink)
         
-        dec.connect("new-decoded-pad", self.decoder_callback)
-        src.link(depay)
+        src.link(capsFilter)
+        capsFilter.link(depay)
         depay.link(dec)
         dec.link(sink)
 
@@ -90,12 +92,6 @@ class ClientApp:
             print "Error: %s" % err, debug
             self.pipeline.set_state(gst.STATE_NULL)
 
-    def decoder_callback(self, decoder, pad, data):
-        structure_name = pad.get_caps()[0].get_name()
-        if structure_name.startswith("video"):
-            fv_pad = self.sink.get_pad("sink")
-            pad.link(fv_pad)
-
     def key_event(self, widget, event, direction):
         if direction == KEY_EVENT_PRESS:
             if event.keyval == gtk.keysyms.Escape:
@@ -103,10 +99,10 @@ class ClientApp:
             elif event.keyval == gtk.keysyms.p:
                 if self.pipeline.get_state()[1] == gst.STATE_PLAYING:
                     self.pipeline.set_state(gst.STATE_PAUSED)
-                    self.cam_stop()
+                    self.cam_pause()
                 else:
-                    self.pipeline.set_state(gst.STATE_PLAYING)
                     self.cam_play()
+                    self.pipeline.set_state(gst.STATE_PLAYING)
             elif event.keyval == gtk.keysyms.w:
                 print "forward"
                 self.forward()
@@ -134,7 +130,7 @@ class ClientApp:
 
     def main(self):
         gtk.gdk.threads_init()
-        self.pipeline.set_state(gst.STATE_PLAYING)
+        self.pipeline.set_state(gst.STATE_PAUSED)
         gtk.main()
 
 class ProxyHandler:

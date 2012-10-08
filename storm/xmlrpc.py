@@ -15,8 +15,9 @@ import time
 import logging
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
-from storm.bldc import MotorController
 from ConfigParser import SafeConfigParser
+from storm.bldc import MotorController
+from storm.cam import Vid_Server
 from storm import version
 
 from datetime import datetime
@@ -96,6 +97,7 @@ def run_server(log_level=logging.INFO, config_file=''):
 
 	
     motors = MotorController(log)
+    cam = Vid_Server()
 
     host = config.get('storm','bind_host')
     port = config.getint('storm','bind_port')
@@ -104,6 +106,9 @@ def run_server(log_level=logging.INFO, config_file=''):
     server = SimpleXMLRPCServer((host, port), logRequests=False, allow_none=True)
     server.register_function(motors.add_channel, "add_channel")
     server.register_function(motors.set_pulse, "set_pulse")
+    server.register_function(cam.play, "cam_play")
+    server.register_function(cam.pause, "cam_pause")
+    server.register_function(cam.stop, "cam_stop")
 
     log.info('Starting server')
     server.serve_forever()

@@ -17,7 +17,7 @@ import logging
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from ConfigParser import SafeConfigParser
 from storm.bldc import MotorController
-from storm.cam import Vid_Server
+from storm.cam import VidServer
 from storm import version
 
 from datetime import datetime
@@ -97,7 +97,7 @@ def run_server(log_level=logging.INFO, config_file=''):
 
 	
     motors = MotorController(log)
-    cam = Vid_Server()
+    cam = VidServer(log)
 
     host = config.get('storm','bind_host')
     port = config.getint('storm','bind_port')

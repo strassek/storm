@@ -1,11 +1,10 @@
-
 import gobject
 import pygst
 pygst.require('0.10')
 import gst
 
-class Vid_Server:
-    def __init__(self):
+class VidServer:
+    def __init__(self, log):
         src = gst.element_factory_make("v4l2src")
 	src.set_property("device", "/dev/video6")
 
@@ -30,12 +29,15 @@ class Vid_Server:
         bus.add_signal_watch()
         bus.connect("message", self.on_message)
 
+	log.info("Initialized video streaming server.")
+
         self.pipeline = pipeline
+	self.log = log
 
     def on_message(self, bus, message):
         if message.type == gst.MESSAGE_ERROR:
             err, debug = message.parse_error()
-            print "Error: %s" % err, debug
+            log.warn("Error: %s" % err, debug)
             self.pipeline.set_state(gst.STATE_NULL)
                
     def play(self):
@@ -47,11 +49,3 @@ class Vid_Server:
     def stop(self):
         self.pipeline.set_state(gst.STATE_NULL)
 
-    def main(self):
-        self.pipeline.set_state(gst.STATE_PLAYING)
-        loop = gobject.MainLoop()
-        loop.run()
-        
-if __name__ == "__main__":
-    srv = Vid_Server()
-    srv.main()

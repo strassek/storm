@@ -36,18 +36,21 @@ class ClientApp:
         vbox.add(self.movie_window)
         window.show_all()
         
-        src = gst.element_factory_make("filesrc", "file-source")
-        src.set_property("location", "/home/strassek/Videos/yocto_mobile.mp4")
-        dec = gst.element_factory_make("decodebin2", "decoder")
-        sink  = gst.element_factory_make("autovideosink", "sink")
-
-        self.fakev = sink
+        src = gst.element_factory_make("udpsrc")
+        src.set_property("port", 4000)
+        src.set_property("caps", "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)MP4V-ES, profile-level-id=(string)5, config=(string)000001b005000001b509000001000000012000845d4c28bc21e0a31f, payload=(int)96, ssrc=(uint)2023770825, clock-base=(uint)2503951416, seqnum-base=(uint)23512")
+        depay = gst.element_factory_make("rtpmp4vdepay")
+        dec = gst.element_factory_make("ffdec_mpeg4", "decoder")
+        sink  = gst.element_factory_make("xvimagesink", "sink")
+        sink.set_property("sync", "false")
 
         pipeline = gst.Pipeline("pipeline")
-        pipeline.add(src, dec, sink)
+        pipeline.add(src, depay, dec, sink)
         
         dec.connect("new-decoded-pad", self.decoder_callback)
-        gst.element_link_many(src, dec)
+        src.link(depay)
+        depay.link(dec)
+        dec.link(sink)
 
         bus = pipeline.get_bus()
         bus.add_signal_watch()
@@ -57,6 +60,7 @@ class ClientApp:
 
         self.window = window
         self.pipeline = pipeline
+        self.sink = sink
 
     def on_sync_message(self, bus, message):
         if message.structure is None:
@@ -89,7 +93,7 @@ class ClientApp:
     def decoder_callback(self, decoder, pad, data):
         structure_name = pad.get_caps()[0].get_name()
         if structure_name.startswith("video"):
-            fv_pad = self.fakev.get_pad("sink")
+            fv_pad = self.sink.get_pad("sink")
             pad.link(fv_pad)
 
     def key_event(self, widget, event, direction):
@@ -99,8 +103,10 @@ class ClientApp:
             elif event.keyval == gtk.keysyms.p:
                 if self.pipeline.get_state()[1] == gst.STATE_PLAYING:
                     self.pipeline.set_state(gst.STATE_PAUSED)
+                    self.cam_stop()
                 else:
                     self.pipeline.set_state(gst.STATE_PLAYING)
+                    self.cam_play()
             elif event.keyval == gtk.keysyms.w:
                 print "forward"
                 self.forward()
@@ -122,9 +128,9 @@ class ClientApp:
             elif event.keyval == gtk.keysyms._3:
                 print "Arming channel 3, please wait..."
                 self.arm(3)
-            elif direction == KEY_EVENT_RELEASE:
-                print "stop"            
-                self.stop()
+        elif direction == KEY_EVENT_RELEASE:
+            print "stop"            
+            self.stop()
 
     def main(self):
         gtk.gdk.threads_init()
@@ -169,6 +175,15 @@ class ProxyHandler:
         self.send_pulse(1, PULSE_LOW)
         self.send_pulse(2, PULSE_LOW)
 
+    def cam_play(self):
+        self.proxy.cam_play()
+
+    def cam_pause(self):
+        self.proxy.cam_pause()
+
+    def cam_stop(self):
+        self.proxy.cam_stop()
+
 def usage():
     print """
 Usage: %s [options]
@@ -206,6 +221,9 @@ if __name__ == '__main__':
     app.right = proxy.right
     app.stop = proxy.stop
     app.arm = proxy.arm
+    app.cam_play = proxy.cam_play
+    app.cam_pause = proxy.cam_pause
+    app.cam_stop = proxy.cam_stop
 
     app.main()
 

@@ -14,8 +14,6 @@ from robovero.lpc_types import FunctionalState
 
 from robovero.arduino import analogWrite, PWM1
 
-import logging
-
 # Entry Point
 roboveroConfig()
 

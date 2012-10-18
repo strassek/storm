@@ -29,10 +29,10 @@ class VidServer:
         bus.add_signal_watch()
         bus.connect("message", self.on_message)
 
-	log.info("Initialized video streaming server.")
+    log.info("Initialized video streaming server.")
 
         self.pipeline = pipeline
-	self.log = log
+    self.log = log
 
     def on_message(self, bus, message):
         if message.type == gst.MESSAGE_ERROR:

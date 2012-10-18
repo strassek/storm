@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 
-# The following script will control the Dream Cheeky Storm & Thunder USB
-# Missile Launchers.  There are a few projects for using older launchers
-# in Linux, but I couldn't find any for this launcher, so... enjoy.
-
-# Thunder: http://www.dreamcheeky.com/thunder-missile-launcher
-# O.I.C Storm: http://www.dreamcheeky.com/storm-oic-missile-launcher
-
-# wasd to aim. hold spacebar to fire.
-
 import sys
 import os
 import time

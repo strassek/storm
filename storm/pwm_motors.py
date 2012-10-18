@@ -24,7 +24,7 @@ DISABLE = FunctionalState.DISABLE
 
 class MotorController():
     def __init__(self, log, periodValue = 1200):
-	self._log = log
+        self._log = log
         self.periodValue = periodValue
         
         roboveroConfig()
@@ -54,10 +54,10 @@ class MotorController():
         # Enable channels 0 and 1
         MCPWM_Start(LPC_MCPWM, ENABLE, ENABLE, DISABLE)
 
-	pinMode(P0_4, OUTPUT)
-	pinMode(P0_5, OUTPUT)
-	pinMode(P2_3, OUTPUT)
-	pinMode(P2_4, OUTPUT)
+        pinMode(P0_4, OUTPUT)
+        pinMode(P0_5, OUTPUT)
+        pinMode(P2_3, OUTPUT)
+        pinMode(P2_4, OUTPUT)
 
     def set_speed(self, req_channel, req_speed):
         channel = int(req_channel)
@@ -73,29 +73,29 @@ class MotorController():
         MCPWM_WriteToShadow(LPC_MCPWM, channel, self.channelsetup.ptr)
 
     def set_direction(self, req_channel, req_direction):
-	channel = int(req_channel)
-	direction = int(req_direction)
+        channel = int(req_channel)
+        direction = int(req_direction)
 
-	if channel == 1:
-		if direction == 0:
-			digitalWrite(P0_4, HIGH)
-			digitalWrite(P0_5, LOW)
-		elif direction == 1:
-			digitalWrite(P0_4, LOW)
-			digitalWrite(P0_5, HIGH)		
-		else:
-			digitalWrite(P0_4, LOW)
-			digitalWrite(P0_5, LOW)	
-	if channel == 0:
-		if direction == 0:
-			digitalWrite(P2_3, HIGH)
-			digitalWrite(P2_4, LOW)
-		elif direction == 1:
-			digitalWrite(P2_3, LOW)
-			digitalWrite(P2_4, HIGH)		
-		else:
-			digitalWrite(P2_3, LOW)
-			digitalWrite(P2_4, LOW)	
+        if channel == 1:
+            if direction == 0:
+                digitalWrite(P0_4, HIGH)
+                digitalWrite(P0_5, LOW)
+            elif direction == 1:
+                digitalWrite(P0_4, LOW)
+                digitalWrite(P0_5, HIGH)        
+            else:
+                digitalWrite(P0_4, LOW)
+                digitalWrite(P0_5, LOW) 
+        if channel == 0:
+            if direction == 0:
+                digitalWrite(P2_3, HIGH)
+                digitalWrite(P2_4, LOW)
+            elif direction == 1:
+                digitalWrite(P2_3, LOW)
+                digitalWrite(P2_4, HIGH)        
+            else:
+                digitalWrite(P2_3, LOW)
+                digitalWrite(P2_4, LOW) 
         
 if __name__ == '__main__':
     motors = MotorController()
@@ -104,14 +104,14 @@ if __name__ == '__main__':
         while True:
             new_channel = raw_input("Channel: ") 
             new_speed = raw_input("Speed (%): ")
-	    new_direction = raw_input("Direction: ")
+        new_direction = raw_input("Direction: ")
             motors.set_speed(new_channel, new_speed)
-	    motors.set_direction(new_channel, new_direction)   
+        motors.set_direction(new_channel, new_direction)   
     except:
         MCPWM_Stop(LPC_MCPWM, ENABLE, ENABLE, DISABLE)
         digitalWrite(P0_4, LOW)
-	digitalWrite(P0_5, LOW)
-	digitalWrite(P2_3, LOW)
-	digitalWrite(P2_4, LOW)
+    digitalWrite(P0_5, LOW)
+    digitalWrite(P2_3, LOW)
+    digitalWrite(P2_4, LOW)
         sys.stdout.write("You broke it.\n")
 

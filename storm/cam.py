@@ -4,7 +4,7 @@ pygst.require('0.10')
 import gst
 
 class VidServer:
-    def __init__(self, log):
+    def __init__(self, log, config):
         src = gst.element_factory_make("v4l2src")
         src.set_property("device", "/dev/video6")
 
@@ -15,8 +15,11 @@ class VidServer:
         pay = gst.element_factory_make("rtpmp4vpay")
 
         sink = gst.element_factory_make("udpsink")
-        sink.set_property("host", "192.168.2.3")
-        sink.set_property("port", 4000)
+        host = config.get('video', 'bind_host')
+        port = config.getint('video', 'bind_port')
+        sink.set_property("host", host)
+        sink.set_property("port", port)
+        log.info("udpsink pointed at %s:%d" % (host, port))
 
         pipeline = gst.Pipeline("pipeline")
         pipeline.add(src, enc, pay, sink)
@@ -29,10 +32,11 @@ class VidServer:
         bus.add_signal_watch()
         bus.connect("message", self.on_message)
 
-    log.info("Initialized video streaming server.")
+        log.info("Initialized video streaming server.")
 
         self.pipeline = pipeline
-    self.log = log
+        self.log = log
+        self.config = config
 
     def on_message(self, bus, message):
         if message.type == gst.MESSAGE_ERROR:

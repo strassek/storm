@@ -87,12 +87,12 @@ def run_server(log_level=logging.INFO, config_file=''):
         log.info('Using default settings')
 
     
-    motors = MotorController(log)
-    cam = VidServer(log)
+    motors = MotorController(log, config)
+    cam = VidServer(log, config)
 
-    host = config.get('storm','bind_host')
-    port = config.getint('storm','bind_port')
-    log.info('Listening on %s:%d' % (host, port))
+    host = config.get('control','bind_host')
+    port = config.getint('control','bind_port')
+    log.info('xmlrpc listening on %s:%d' % (host, port))
 
     server = SimpleXMLRPCServer((host, port), logRequests=False, allow_none=True)
     server.register_function(motors.add_channel, "add_channel")

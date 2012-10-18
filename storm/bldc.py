@@ -31,20 +31,21 @@ def getServoAngle(raw_angle):
 
 class MotorController():
 
-	def __init__(self, log, period=20000):
-		"""Set up PWM at 50Hz.
-		"""
-		self.log = log
+	def __init__(self, log, config):
 
-		# Set the period to 20000us = 20ms = 50Hz
+        period = config.getint('bldc', 'pwm_period')
 		initMatch(0, period)
+        log.info("Set pwm period to %d" % period)
 
 		PWM_ResetCounter(LPC_PWM1)
 		PWM_CounterCmd(LPC_PWM1, FunctionalState.ENABLE)
 		PWM_Cmd(LPC_PWM1, FunctionalState.ENABLE)
 
+		log.info("Initialized BLDC motor controller.")	
+
 		self.channels = []
-		self.log.info("Initialized BLDC motor controller.")	
+		self.log = log
+        self.config = config
 
 	def add_channel(self, raw_channel, init_pulse = 1500):
 		"""Add PWM channel with a 1.5ms pulse.

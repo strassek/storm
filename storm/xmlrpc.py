@@ -64,7 +64,7 @@ class ConsoleHandler(logging.StreamHandler):
         s += record.msg
         s += '\n'
         self.stream.write(s)
-	
+    
 def make_log(debug=False, log_level=logging.INFO):
     log = logging.getLogger('storm')
     log.setLevel(logging.DEBUG)
@@ -95,7 +95,7 @@ def run_server(log_level=logging.INFO, config_file=''):
     else:
         log.info('Using default settings')
 
-	
+    
     motors = MotorController(log)
     cam = VidServer(log)
 

@@ -5,11 +5,11 @@ import getopt
 import os.path
 import logging
 
-from storm.xmlrpc import run_server
 from storm.daemon import Daemon
 
 class StormDaemon(Daemon):
     def run(self):
+        from storm.xmlrpc import run_server
         run_server(self.log_level, self.config_file)
 
 def usage():
@@ -67,6 +67,7 @@ if __name__ == '__main__':
             config_file = os.path.join(sys.path[0], 'storm.conf')
 
     if action == 'run':
+        from storm.xmlrpc import run_server
         run_server(log_level, config_file)
     else:
         stormid = StormDaemon('/var/run/storm.pid',stdout='/var/log/storm.log',stderr='/var/log/storm.err.log')

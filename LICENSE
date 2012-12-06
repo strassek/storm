@@ -1,0 +1,11 @@
+* MIT
+
+This program is distributed under the MIT license.
+Please refer to COPYING.MIT for details.
+
+* LGPLv3
+
+The files storm/config.py and storm/xmlrpc.py are licensed under LGPLv3.
+They contain trivial functionality, and, therefore, including them does 
+not make storm a derivative work. Please refer to COPYING.LESSER as well
+as COPYING for details.

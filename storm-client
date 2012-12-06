@@ -1,0 +1,249 @@
+#!/usr/bin/env python
+
+import xmlrpclib
+import getopt
+import time
+import sys
+
+import pygtk
+pygtk.require('2.0')
+import gtk
+import gobject
+import pygst
+pygst.require('0.10')
+import gst
+
+import socket
+
+KEY_EVENT_PRESS = (0)
+KEY_EVENT_RELEASE = (1)
+
+PULSE_HI = 1211
+PULSE_LOW = 1183
+PULSE_ARM = 1100
+
+class ClientApp:
+
+    def __init__(self):
+        window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        window.set_title("meson | storm")
+        window.connect("destroy", gtk.main_quit, "WM destroy")
+        window.connect("key-press-event", self.key_event, KEY_EVENT_PRESS)
+        window.connect("key-release-event", self.key_event, KEY_EVENT_RELEASE)
+        vbox = gtk.VBox()
+        window.add(vbox)
+        self.movie_window = gtk.DrawingArea()
+        vbox.add(self.movie_window)
+        window.show_all()
+        
+        src = gst.element_factory_make("udpsrc")
+        src.set_property("port", 4000)
+        caps = gst.Caps("application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)MP4V-ES, profile-level-id=(string)5, config=(string)000001b005000001b509000001000000012000845d4c28bc21e0a31f, payload=(int)96, ssrc=(uint)2023770825, clock-base=(uint)2503951416, seqnum-base=(uint)23512")
+        capsFilter = gst.element_factory_make("capsfilter")
+        capsFilter.props.caps = caps
+        depay = gst.element_factory_make("rtpmp4vdepay")
+        dec = gst.element_factory_make("ffdec_mpeg4", "decoder")
+        sink  = gst.element_factory_make("xvimagesink", "sink")
+        sink.set_property("sync", "false")
+
+        pipeline = gst.Pipeline("pipeline")
+        pipeline.add(src, capsFilter, depay, dec, sink)
+        
+        src.link(capsFilter)
+        capsFilter.link(depay)
+        depay.link(dec)
+        dec.link(sink)
+
+        bus = pipeline.get_bus()
+        bus.add_signal_watch()
+        bus.enable_sync_message_emission()
+        bus.connect("sync-message::element", self.on_sync_message)
+        bus.connect("message", self.on_message)
+
+        self.window = window
+        self.pipeline = pipeline
+        self.sink = sink
+        self.last_keyval = None
+        self.last_direction = None
+        self.autopilot_flag = False
+
+    def on_sync_message(self, bus, message):
+        if message.structure is None:
+            return
+        message_name = message.structure.get_name()
+        if message_name == "prepare-xwindow-id":
+            imagesink = message.src
+            imagesink.set_property("force-aspect-ratio", True)
+            gtk.gdk.threads_enter()
+            imagesink.set_xwindow_id(self.movie_window.window.xid)
+            gtk.gdk.threads_leave()
+
+    def on_message(self, bus, message):
+        t = message.type
+        if t == gst.MESSAGE_STATE_CHANGED:
+            if message.parse_state_changed()[1] == gst.STATE_PAUSED:
+                for i in self.pipeline.get_by_name("decoder").src_pads():
+                    structure_name = i.get_caps()[0].get_name()
+                    if structure_name.startswith("video") and "width" in i.get_caps()[0].keys():
+                        if len(str(i.get_caps()[0]["width"])) < 6:
+                            w = i.get_caps()[0]["width"]
+                            h = i.get_caps()[0]["height"]
+                            self.window.resize(width=w, height=h)
+                            break
+        elif t == gst.MESSAGE_ERROR:
+            err, debug = message.parse_error()
+            print "Error: %s" % err, debug
+            self.pipeline.set_state(gst.STATE_NULL)
+
+    def key_event(self, widget, event, direction):
+        if direction == KEY_EVENT_PRESS:
+            if event.keyval == gtk.keysyms.Escape:
+                gtk.main_quit()
+           
+           # Start non-spammable buttons
+            if event.keyval == self.last_keyval and direction == self.last_direction:
+                return
+
+            if event.keyval == gtk.keysyms.p:
+                if self.pipeline.get_state()[1] == gst.STATE_PLAYING:
+                    self.pipeline.set_state(gst.STATE_PAUSED)
+                    self.cam_pause()
+                else:
+                    self.cam_play()
+                    self.pipeline.set_state(gst.STATE_PLAYING)
+            elif event.keyval == gtk.keysyms.space:
+                print "up"
+                self.up()
+            elif event.keyval == gtk.keysyms.o:
+                if self.autopilot_flag:
+                    print "autopilot off"
+                    self.autopilot_stop()
+                    self.autopilot_flag = False
+                else:
+                    print "autopilot on"
+                    self.autopilot_run()
+                    self.autopilot_flag = True
+
+            if event.keyval == gtk.keysyms.w:
+                print "forward"
+                self.forward()
+            elif event.keyval == gtk.keysyms.s:
+                print "back"
+            elif event.keyval == gtk.keysyms.a:
+                print "left"
+                self.left()
+            elif event.keyval == gtk.keysyms.d:
+                print "right"
+                self.right()
+            elif event.keyval == gtk.keysyms._1:
+                print "Arming channel 1, please wait..."
+                self.arm(1)
+            elif event.keyval == gtk.keysyms._2:
+                print "Arming channel 2, please wait..."
+                self.arm(2)
+            elif event.keyval == gtk.keysyms._3:
+                print "Arming channel 3, please wait..."
+                self.arm(3)
+        elif direction == KEY_EVENT_RELEASE:
+            if event.keyval == gtk.keysyms.space:
+                print "down"
+                self.down()
+            else:
+                print "hover"            
+                self.hover()
+        self.last_keyval = event.keyval
+        self.last_direction = direction
+
+    def main(self):
+        gtk.gdk.threads_init()
+        self.pipeline.set_state(gst.STATE_PAUSED)
+        gtk.main()
+
+class ProxyHandler:
+    
+    def __init__(self, host):
+        self.proxy = xmlrpclib.ServerProxy(host)
+        #TODO ping host and do not allow further action until connected
+
+    def arm(self, channel):
+        self.send_pulse(channel, PULSE_ARM)
+
+    def forward(self):
+        self.proxy.move_forward()
+
+    def left(self):
+        self.proxy.move_left()
+    
+    def right(self):
+        self.proxy.move_right()
+
+    def up(self):
+        self.proxy.move_up()
+
+    def down(self):
+        self.proxy.move_down()
+
+    def hover(self):
+        self.proxy.hover()
+
+    def cam_play(self):
+        self.proxy.cam_play()
+
+    def cam_pause(self):
+        self.proxy.cam_pause()
+
+    def cam_stop(self):
+        self.proxy.cam_stop()
+
+    def autopilot_run(self):
+        self.proxy.autopilot_run()
+        
+    def autopilot_stop(self):
+        self.proxy.autopilot_stop()
+
+def usage():
+    print """
+Usage: %s [options]
+Options:
+    -r, --remote <uri> - Connect to remote server
+    -h, --help - This help
+""" % sys.argv[0]
+
+if __name__ == '__main__':
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'r:h', ['remote=', 'help'])
+    except getopt.GetoptError, e:
+        print str(e)
+        usage()
+        sys.exit(2)
+
+    action = 'local'
+    host = 'http://localhost:8000/'
+
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            usage()
+            sys.exit(0)
+        elif o in ('-r', '--remote'):
+            action = 'remote'
+            host = a
+
+    proxy = ProxyHandler(host)
+    app = ClientApp()
+
+    app.forward = proxy.forward
+    app.left = proxy.left
+    app.right = proxy.right
+    app.arm = proxy.arm
+    app.cam_play = proxy.cam_play
+    app.cam_pause = proxy.cam_pause
+    app.cam_stop = proxy.cam_stop
+    app.hover = proxy.hover
+    app.up = proxy.up
+    app.down = proxy.down
+    app.autopilot_run = proxy.autopilot_run
+    app.autopilot_stop = proxy.autopilot_stop
+
+    app.main()
+

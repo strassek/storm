@@ -1,0 +1,9 @@
+# Storm
+
+Storm is a control application for the Yocto Project blimp demo.
+
+This project depends on PyGTK and PyGST.
+
+## License
+
+Storm is made available under the MIT license.

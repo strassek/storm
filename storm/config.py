@@ -1,5 +1,5 @@
 # Copyright (C) 2007 Free Software Foundation, Inc.
-# This file is part of Ajenti.
+# This file contains code that is adapted from Ajenti.
 # Written by Eugeny Pankov, 2010-2011.
 #
 # Ajenti is free software; you can redistribute it and/or
@@ -13,7 +13,7 @@
 # Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with Ajenti; if not, see <http://www.gnu.org/licenses/>
+# License along with this file; if not, see <http://www.gnu.org/licenses/>
 
 from ConfigParser import ConfigParser
 import os

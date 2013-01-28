@@ -13,7 +13,7 @@
 # Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with Ajenti; if not, see <http://www.gnu.org/licenses/>
+# License along with this file; if not, see <http://www.gnu.org/licenses/>
 
 import sys
 import os

@@ -1,9 +1,42 @@
-# Storm
+Storm
+=====
 
-Storm is a control application for the Yocto Project blimp demo.
+Storm is the control application behind the Yocto Project blimp demo. 
 
-This project depends on PyGTK and PyGST.
+Storm currently has the following capabilities:
+  - Remote control over IP
+  - Live video capture and streaming over IP
+  - Autopilot
 
-## License
+Dependencies
+------------
 
-Storm is made available under the MIT license.
+This project depends on GTK and gstreamer, each with their respective
+python bindings.
+The server component is designed to work with Gumstix's Robovero 
+expansion board. Communication with the board is facilitated through
+use of their python library, available here 
+(https://github.com/robovero/python).
+
+
+DSP Considerations
+------------------
+
+In order to get live video encoding working at a reasonable frame rate, it 
+is necessary to leverage the on-board digital signal processor (DSP).
+Getting this setup is somewhat involved; you will be required to install
+some specialized libraries and set aside some physical memory to avoid
+conflicts between the DSP and kernel. After everything is in place you 
+will be able to plug a DSP accelerated encoder directly into a gstreamer 
+pipeline.
+
+A detailed walkthrough can be found here:
+http://jumpnowtek.com/index.php?option=com_content&view=article&id=81:gumstix-dsp-gstreamer&catid=35:gumstix&Itemid=67
+
+License
+-------
+
+Copyright (C) 2013 Intel Corporation
+
+Unless otherwise stated, Storm is made available under the MIT license. Please
+refer to LICENSE for more detail.
